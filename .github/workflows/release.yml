@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "assert/v*"
+      - "slogx/v*"
+      - "stringx/v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Parse module and version from tag
+        id: meta
+        run: |
+          tag="$GITHUB_REF_NAME"
+          echo "module=${tag%%/*}" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#*/}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: ${{ steps.meta.outputs.module }}/go.mod
+          cache-dependency-path: |
+            **/go.sum
+            **/go.mod
+
+      - name: Verify module standalone
+        working-directory: ${{ steps.meta.outputs.module }}
+        env:
+          GOWORK: "off"
+        run: |
+          go mod tidy -diff
+          go test -v -race ./...
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "${{ steps.meta.outputs.module }} ${{ steps.meta.outputs.version }}" \
+            --generate-notes
