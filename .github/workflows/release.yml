@@ -24,13 +24,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
 
       - name: Parse module and version from tag
         id: meta
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          tag="$GITHUB_REF_NAME"
-          echo "module=${tag%%/*}" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#*/}" >> "$GITHUB_OUTPUT"
+          echo "module=${TAG%%/*}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-go@v7
         with:
@@ -50,7 +53,8 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$TAG" \
             --title "${{ steps.meta.outputs.module }} ${{ steps.meta.outputs.version }}" \
             --generate-notes
