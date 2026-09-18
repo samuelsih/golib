@@ -6,6 +6,8 @@ on:
       - "assert/v*"
       - "slogx/v*"
       - "stringx/v*"
+      - "concx/v*"
+      - "httpx/v*"
 
 permissions:
   contents: write
