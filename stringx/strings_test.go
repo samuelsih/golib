@@ -90,6 +90,102 @@ func TestGenerators(t *testing.T) {
 	}
 }
 
+func TestPascalCase(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "empty", in: "", want: ""},
+		{name: "blank", in: " ", want: ""},
+		{name: "lowercase", in: "simple", want: "Simple"},
+		{name: "uppercase", in: "SIMPLE", want: "SIMPLE"},
+		{name: "snake", in: "simple_test", want: "SimpleTest"},
+		{name: "kebab", in: "simple-test", want: "SimpleTest"},
+		{name: "spaces", in: "simple test", want: "SimpleTest"},
+		{name: "dotted", in: "simple.test", want: "SimpleTest"},
+		{name: "mixed separators", in: "a.b-c_d e", want: "ABCDE"},
+		{name: "already pascal", in: "AlreadyPascal", want: "AlreadyPascal"},
+		{name: "camel", in: "alreadyCamel", want: "AlreadyCamel"},
+		{name: "acronym", in: "JSONData", want: "JSONData"},
+		{name: "digits", in: "foo2bar", want: "Foo2Bar"},
+		{name: "leading digits", in: "2fast2furious", want: "2Fast2Furious"},
+		{name: "padded", in: "  padded  ", want: "Padded"},
+		{name: "repeated separators", in: "--multiple--separators--", want: "MultipleSeparators"},
+		{name: "leading and trailing underscores", in: "__leading__trailing__", want: "LeadingTrailing"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, PascalCase(tt.in), tt.want)
+		})
+	}
+}
+
+func TestCamelCase(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "empty", in: "", want: ""},
+		{name: "blank", in: " ", want: ""},
+		{name: "lowercase", in: "simple", want: "simple"},
+		{name: "pascal single word", in: "Simple", want: "simple"},
+		{name: "uppercase", in: "SIMPLE", want: "sIMPLE"},
+		{name: "snake", in: "simple_test", want: "simpleTest"},
+		{name: "kebab", in: "simple-test", want: "simpleTest"},
+		{name: "spaces", in: "simple test", want: "simpleTest"},
+		{name: "dotted", in: "simple.test", want: "simpleTest"},
+		{name: "mixed separators", in: "a.b-c_d e", want: "aBCDE"},
+		{name: "already camel", in: "alreadyCamel", want: "alreadyCamel"},
+		{name: "pascal", in: "AlreadyPascal", want: "alreadyPascal"},
+		{name: "acronym", in: "JSONData", want: "jSONData"},
+		{name: "digits", in: "foo2bar", want: "foo2Bar"},
+		{name: "leading digits", in: "2fast2furious", want: "2Fast2Furious"},
+		{name: "padded", in: "  padded  ", want: "padded"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, CamelCase(tt.in), tt.want)
+		})
+	}
+}
+
+func TestSnakeCase(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "empty", in: "", want: ""},
+		{name: "blank", in: " ", want: ""},
+		{name: "lowercase", in: "simple", want: "simple"},
+		{name: "uppercase", in: "SIMPLE", want: "simple"},
+		{name: "pascal", in: "AlreadyPascal", want: "already_pascal"},
+		{name: "camel", in: "getUserList", want: "get_user_list"},
+		{name: "acronym", in: "JSONData", want: "json_data"},
+		{name: "acronym with number", in: "HTTP2Server", want: "http_2_server"},
+		{name: "trailing acronym", in: "userID", want: "user_id"},
+		{name: "snake unchanged", in: "already_snake_test", want: "already_snake_test"},
+		{name: "kebab", in: "simple-test", want: "simple_test"},
+		{name: "spaces", in: "simple test", want: "simple_test"},
+		{name: "dotted", in: "simple.test", want: "simple.test"},
+		{name: "digits", in: "foo2Bar", want: "foo_2_bar"},
+		{name: "leading digits", in: "2fast2furious", want: "2_fast_2_furious"},
+		{name: "mixed separators", in: "a.b-c_d e", want: "a.b_c_d_e"},
+		{name: "padded", in: "  padded  ", want: "padded"},
+		{name: "leading and trailing underscores", in: "__leading__trailing__", want: "__leading__trailing__"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, SnakeCase(tt.in), tt.want)
+		})
+	}
+}
+
 func TestUnsafeFromBytes(t *testing.T) {
 	tests := []struct {
 		name string
