@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     tags:
+      - "v*"
       - "assert/v*"
       - "slogx/v*"
       - "stringx/v*"
@@ -11,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (e.g. httpx/v1.0.0)"
+        description: "Tag to release (e.g. v1.0.0 for golib, httpx/v1.0.0 for a submodule)"
         required: true
         type: string
 
@@ -32,18 +33,33 @@ jobs:
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          echo "module=${TAG%%/*}" >> "$GITHUB_OUTPUT"
-          echo "version=${TAG#*/}" >> "$GITHUB_OUTPUT"
+          version="${TAG##*/}"
+          prefix="${TAG%%/*}"
+
+          if [[ "$TAG" == */* && -f "$prefix/go.mod" ]]; then
+            dir="$prefix"
+            name="$prefix"
+          else
+            dir="."
+            name="golib"
+          fi
+
+          {
+            echo "dir=$dir"
+            echo "name=$name"
+            echo "version=$version"
+            echo "title=$name $version"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-go@v7
         with:
-          go-version-file: ${{ steps.meta.outputs.module }}/go.mod
+          go-version-file: ${{ steps.meta.outputs.dir }}/go.mod
           cache-dependency-path: |
             **/go.sum
             **/go.mod
 
       - name: Verify module standalone
-        working-directory: ${{ steps.meta.outputs.module }}
+        working-directory: ${{ steps.meta.outputs.dir }}
         env:
           GOWORK: "off"
         run: |
@@ -56,5 +72,5 @@ jobs:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           gh release create "$TAG" \
-            --title "${{ steps.meta.outputs.module }} ${{ steps.meta.outputs.version }}" \
+            --title "${{ steps.meta.outputs.title }}" \
             --generate-notes
