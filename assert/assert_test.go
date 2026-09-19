@@ -16,6 +16,14 @@ func (a byID) Equal(b byID) bool {
 	return a.id == b.id
 }
 
+type ptrEqual struct {
+	id int
+}
+
+func (a *ptrEqual) Equal(b *ptrEqual) bool {
+	return a.id == b.id
+}
+
 type customError struct {
 	msg string
 }
@@ -42,6 +50,9 @@ func TestIsEqual(t *testing.T) {
 		{name: "different maps", got: isEqual(map[string]int{"a": 1}, map[string]int{"b": 1}), want: false},
 		{name: "Equal method ignores other fields", got: isEqual(byID{id: 1, name: "mario"}, byID{id: 1, name: "luigi"}), want: true},
 		{name: "Equal method rejects different id", got: isEqual(byID{id: 1, name: "mario"}, byID{id: 2, name: "mario"}), want: false},
+		{name: "typed nil got with Equal method", got: isEqual((*ptrEqual)(nil), &ptrEqual{id: 1}), want: false},
+		{name: "typed nil want with Equal method", got: isEqual(&ptrEqual{id: 1}, (*ptrEqual)(nil)), want: false},
+		{name: "equal pointers with Equal method", got: isEqual(&ptrEqual{id: 1}, &ptrEqual{id: 1}), want: true},
 	}
 
 	for _, tt := range tests {

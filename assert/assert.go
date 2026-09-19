@@ -85,8 +85,9 @@ func NoError(t *testing.T, err error) {
 }
 
 func isEqual[T any](got, want T) bool {
-	if isNil(got) && isNil(want) {
-		return true
+	gotNil, wantNil := isNil(got), isNil(want)
+	if gotNil || wantNil {
+		return gotNil && wantNil
 	}
 	if equalable, ok := any(got).(interface{ Equal(T) bool }); ok {
 		return equalable.Equal(want)
