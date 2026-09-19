@@ -10,7 +10,7 @@ import (
 	"github.com/samuelsih/golib/assert"
 )
 
-func corsTestHandler(w http.ResponseWriter, r *http.Request) error {
+func corsTestHandler(w http.ResponseWriter, _ *http.Request) error {
 	_, err := w.Write([]byte("bar"))
 	return err
 }
@@ -381,7 +381,7 @@ func TestSpec(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := NewCORS(tc.options)
 
-			req, _ := http.NewRequest(tc.method, "http://example.com/foo", nil)
+			req, _ := http.NewRequestWithContext(t.Context(), tc.method, "http://example.com/foo", http.NoBody)
 			for name, value := range tc.reqHeaders {
 				req.Header.Add(name, value)
 			}
@@ -416,7 +416,7 @@ func TestHandlePreflightInvalidOriginAbortion(t *testing.T) {
 		AllowedOrigins: []string{"http://foo.com"},
 	})
 	res := httptest.NewRecorder()
-	req, _ := http.NewRequest("OPTIONS", "http://example.com/foo", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodOptions, "http://example.com/foo", http.NoBody)
 	req.Header.Add("Origin", "http://example.com/")
 
 	s.handlePreflight(res, req)
@@ -431,7 +431,7 @@ func TestHandlePreflightNoOptionsAbortion(t *testing.T) {
 		// Intentionally left blank.
 	})
 	res := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "http://example.com/foo", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com/foo", http.NoBody)
 
 	s.handlePreflight(res, req)
 
@@ -443,7 +443,7 @@ func TestHandleActualRequestInvalidOriginAbortion(t *testing.T) {
 		AllowedOrigins: []string{"http://foo.com"},
 	})
 	res := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "http://example.com/foo", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com/foo", http.NoBody)
 	req.Header.Add("Origin", "http://example.com/")
 
 	s.handleActualRequest(res, req)
@@ -459,7 +459,7 @@ func TestHandleActualRequestInvalidMethodAbortion(t *testing.T) {
 		AllowCredentials: true,
 	})
 	res := httptest.NewRecorder()
-	req, _ := http.NewRequest("GET", "http://example.com/foo", nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://example.com/foo", http.NoBody)
 	req.Header.Add("Origin", "http://example.com/")
 
 	s.handleActualRequest(res, req)

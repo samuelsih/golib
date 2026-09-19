@@ -54,12 +54,12 @@ type CORSOptions struct {
 	Debug bool
 }
 
-// Logger generic interface for logger
+// Logger generic interface for logger.
 type Logger interface {
 	Printf(string, ...any)
 }
 
-// CORS http handler
+// CORS http handler.
 type CORS struct {
 	// Debug logger
 	Log Logger
@@ -213,7 +213,7 @@ func (c *CORS) Handler(next Handler) Handler {
 	}
 }
 
-// handlePreflight handles pre-flight CORS requests
+// handlePreflight handles pre-flight CORS requests.
 func (c *CORS) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	origin := r.Header.Get("Origin")
@@ -253,7 +253,6 @@ func (c *CORS) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	// by Access-Control-Request-Method (if supported) can be enough
 	headers.Set("Access-Control-Allow-Methods", strings.ToUpper(reqMethod))
 	if len(reqHeaders) > 0 {
-
 		// Spec says: Since the list of headers can be unbounded, simply returning supported headers
 		// from Access-Control-Request-Headers can be enough
 		headers.Set("Access-Control-Allow-Headers", strings.Join(reqHeaders, ", "))
@@ -267,7 +266,7 @@ func (c *CORS) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	c.logf("Preflight response headers: %v", headers)
 }
 
-// handleActualRequest handles simple cross-origin requests, actual request or redirects
+// handleActualRequest handles simple cross-origin requests, actual request or redirects.
 func (c *CORS) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	// null Origin header value is acceptable and it is considered having that header
@@ -317,7 +316,7 @@ func (c *CORS) logf(format string, a ...any) {
 }
 
 // isOriginAllowed checks if a given origin is allowed to perform cross-domain requests
-// on the endpoint
+// on the endpoint.
 func (c *CORS) isOriginAllowed(r *http.Request, origin string) bool {
 	if c.allowOriginFunc != nil {
 		return c.allowOriginFunc(r, origin)
@@ -340,7 +339,7 @@ func (c *CORS) isOriginAllowed(r *http.Request, origin string) bool {
 }
 
 // isMethodAllowed checks if a given method can be used as part of a cross-domain request
-// on the endpoint
+// on the endpoint.
 func (c *CORS) isMethodAllowed(method string) bool {
 	if len(c.allowedMethods) == 0 {
 		// If no method allowed, always return false, even for preflight request
