@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -218,6 +219,8 @@ func (r *Router) wrapErrors(fn Handler) http.Handler {
 }
 
 func writeError(w http.ResponseWriter, err error) {
+	_, bodyTooLarge := errors.AsType[*http.MaxBytesError](err)
+
 	var status int
 	switch {
 	case errors.Is(err, ErrRouteNotFound):
@@ -227,6 +230,12 @@ func writeError(w http.ResponseWriter, err error) {
 	case errors.Is(err, ErrInvalidRequestBody):
 		status = http.StatusBadRequest
 		slog.Debug("json unmarshal error", slog.String("error", err.Error()))
+	case errors.Is(err, context.DeadlineExceeded), errors.Is(err, ErrTimeoutExceeded):
+		status = http.StatusGatewayTimeout
+	case errors.Is(err, context.Canceled):
+		status = 499
+	case bodyTooLarge:
+		status = http.StatusRequestEntityTooLarge
 	default:
 		status = http.StatusInternalServerError
 		slog.Error("unhandled error", slog.String("error", err.Error()))

@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -412,6 +413,13 @@ func TestWriteError(t *testing.T) {
 		{name: "wrapped method not allowed", err: fmt.Errorf("wrap: %w", ErrMethodNotAllowed), want: http.StatusMethodNotAllowed},
 		{name: "invalid request body", err: ErrInvalidRequestBody, want: http.StatusBadRequest},
 		{name: "wrapped invalid request body", err: fmt.Errorf("wrap: %w", ErrInvalidRequestBody), want: http.StatusBadRequest},
+		{name: "body too large", err: &http.MaxBytesError{Limit: 1}, want: http.StatusRequestEntityTooLarge},
+		{name: "wrapped body too large", err: fmt.Errorf("wrap: %w", &http.MaxBytesError{Limit: 1}), want: http.StatusRequestEntityTooLarge},
+		{name: "deadline exceeded", err: context.DeadlineExceeded, want: http.StatusGatewayTimeout},
+		{name: "wrapped deadline exceeded", err: fmt.Errorf("wrap: %w", context.DeadlineExceeded), want: http.StatusGatewayTimeout},
+		{name: "timeout exceeded", err: ErrTimeoutExceeded, want: http.StatusGatewayTimeout},
+		{name: "client canceled", err: context.Canceled, want: statusClientClosedRequest},
+		{name: "wrapped client canceled", err: fmt.Errorf("wrap: %w", context.Canceled), want: statusClientClosedRequest},
 		{name: "unhandled error", err: errors.New("boom"), want: http.StatusInternalServerError},
 	}
 
