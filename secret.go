@@ -2,15 +2,17 @@ package golib
 
 import (
 	"bytes"
+	"encoding"
 	"encoding/json/v2"
 	"fmt"
 )
 
 var (
-	_ fmt.Stringer     = Secret[string]{}
-	_ fmt.GoStringer   = Secret[string]{}
-	_ json.Marshaler   = Secret[string]{}
-	_ json.Unmarshaler = (*Secret[string])(nil)
+	_ fmt.Stringer             = Secret[string]{}
+	_ fmt.GoStringer           = Secret[string]{}
+	_ json.Marshaler           = Secret[string]{}
+	_ encoding.TextUnmarshaler = (*Secret[string])(nil)
+	_ json.Unmarshaler         = (*Secret[string])(nil)
 )
 
 // Secret holds a value that is redacted when formatted or marshaled.
@@ -57,7 +59,32 @@ func (s *Secret[T]) UnmarshalJSON(p []byte) error {
 	return nil
 }
 
-// ExposedValue returns the wrapped value, revealing the secret.
-func (s Secret[T]) ExposedValue() T {
+// UnmarshalText decodes text into the secret, delegating to the wrapped type's encoding.TextUnmarshaler or assigning string and []byte values.
+func (s *Secret[T]) UnmarshalText(text []byte) error {
+	value := new(T)
+
+	if unmarshaler, ok := any(value).(encoding.TextUnmarshaler); ok {
+		if err := unmarshaler.UnmarshalText(text); err != nil {
+			return err
+		}
+		*s = NewSecret(*value)
+		return nil
+	}
+
+	switch v := any(value).(type) {
+	case *string:
+		*v = string(text)
+	case *[]byte:
+		*v = bytes.Clone(text)
+	default:
+		return fmt.Errorf("golib: cannot unmarshal text into Secret[%T]", *value)
+	}
+
+	*s = NewSecret(*value)
+	return nil
+}
+
+// Value returns the wrapped value, revealing the secret.
+func (s Secret[T]) Value() T {
 	return s.val
 }
