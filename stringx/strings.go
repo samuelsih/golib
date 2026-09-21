@@ -214,6 +214,43 @@ func SnakeCase(s string) string {
 	return n.String()
 }
 
+const (
+	MaskFromBegin = 1
+	MaskUntilEnd  = -1
+)
+
+// Mask replaces runes at 1-based positions startAt through endAt (inclusive) with
+// the repeated replacement rune. Use MaskEnd as endAt to mask through the last rune.
+func Mask(target string, replacement rune, startAt, endAt int) string {
+	if target == "" || replacement == 0 {
+		return target
+	}
+
+	runes := []rune(target)
+	if startAt < 1 {
+		startAt = 1
+	}
+	if endAt <= MaskUntilEnd {
+		endAt = len(runes)
+	}
+	if endAt > len(runes) {
+		endAt = len(runes)
+	}
+	if startAt > endAt || startAt > len(runes) {
+		return target
+	}
+
+	masked := endAt - startAt + 1
+	repl := string(replacement)
+
+	var b strings.Builder
+	b.Grow(len(target) + masked*len(repl))
+	b.WriteString(string(runes[:startAt-1]))
+	b.WriteString(strings.Repeat(repl, masked))
+	b.WriteString(string(runes[endAt:]))
+	return b.String()
+}
+
 // UnsafeFromBytes returns a string pointer without allocation.
 // Dont ever mutate the []byte if []byte still used.
 func UnsafeFromBytes(b []byte) string {

@@ -186,6 +186,41 @@ func TestSnakeCase(t *testing.T) {
 	}
 }
 
+func TestMask(t *testing.T) {
+	tests := []struct {
+		name        string
+		target      string
+		replacement rune
+		startAt     int
+		endAt       int
+		want        string
+	}{
+		{name: "empty target", target: "", replacement: '*', startAt: 1, endAt: 3, want: ""},
+		{name: "middle", target: "abcde", replacement: '*', startAt: 3, endAt: 5, want: "ab***"},
+		{name: "whole string", target: "abcde", replacement: '*', startAt: 1, endAt: 5, want: "*****"},
+		{name: "single char", target: "abcde", replacement: '*', startAt: 3, endAt: 3, want: "ab*de"},
+		{name: "from start", target: "abcde", replacement: '*', startAt: 1, endAt: 3, want: "***de"},
+		{name: "startAt out of range", target: "abcde", replacement: '*', startAt: 6, endAt: 8, want: "abcde"},
+		{name: "endAt out of range", target: "abcde", replacement: '*', startAt: 3, endAt: 99, want: "ab***"},
+		{name: "startAt below one", target: "abcde", replacement: '*', startAt: 0, endAt: 2, want: "**cde"},
+		{name: "negative startAt", target: "abcde", replacement: '*', startAt: -2, endAt: 2, want: "**cde"},
+		{name: "endAt before startAt", target: "abcde", replacement: '*', startAt: 4, endAt: 2, want: "abcde"},
+		{name: "mask until end", target: "abcde", replacement: '*', startAt: 3, endAt: MaskUntilEnd, want: "ab***"},
+		{name: "mask begin to end", target: "abcde", replacement: '*', startAt: MaskFromBegin, endAt: MaskUntilEnd, want: "*****"},
+		{name: "invalid negative endAt", target: "abcde", replacement: '*', startAt: 1, endAt: -2, want: "abcde"},
+		{name: "unicode target", target: "héllo🎮", replacement: '*', startAt: 2, endAt: 3, want: "h**lo🎮"},
+		{name: "unicode whole string", target: "héllo🎮", replacement: '*', startAt: 1, endAt: 6, want: "******"},
+		{name: "unicode replacement", target: "abcde", replacement: '★', startAt: 2, endAt: 4, want: "a★★★e"},
+		{name: "zero rune", target: "abc", replacement: 0, startAt: 2, endAt: 2, want: "abc"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, Mask(tt.target, tt.replacement, tt.startAt, tt.endAt), tt.want)
+		})
+	}
+}
+
 func TestUnsafeFromBytes(t *testing.T) {
 	tests := []struct {
 		name string
