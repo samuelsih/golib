@@ -9,6 +9,7 @@ on:
       - "stringx/v*"
       - "concx/v*"
       - "httpx/v*"
+      - "reflectx/v*"
   workflow_dispatch:
     inputs:
       tag:
