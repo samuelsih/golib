@@ -1,0 +1,4 @@
+github.com/guregu/null/v6 v6.0.0 h1:N14VRS+4di81i1PXRiprbQJ9EM9gqBa0+KVMeS/QSjQ=
+github.com/guregu/null/v6 v6.0.0/go.mod h1:hrMIhIfrOZeLPZhROSn149tpw2gHkidAqxoXNyeX3iQ=
+github.com/samuelsih/golib/assert v1.0.1 h1:hXSDCb+oRsDrg/Am3y3A6jJFh0e+xM6lVECHgw2NsK8=
+github.com/samuelsih/golib/assert v1.0.1/go.mod h1:9yYI+VycQpOXxesjPv5lVJQr4ORr2Ig/qCRNrpwdhf8=
