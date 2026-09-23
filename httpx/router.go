@@ -73,6 +73,11 @@ func NewRouter(opts ...RouterOption) *Router {
 	return r
 }
 
+// Prefix returns the router path prefix set by WithPathPrefix or GroupPrefix.
+func (r *Router) Prefix() string {
+	return r.prefix
+}
+
 // Use appends a middleware handler to the Router middleware stack.
 func (r *Router) Use(middlewares ...Middleware) {
 	r.chain = append(r.chain, middlewares...)

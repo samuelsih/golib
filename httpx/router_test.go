@@ -204,6 +204,7 @@ func TestRouterPathPrefix(t *testing.T) {
 	r := NewRouter(WithPathPrefix("/api/v1"))
 	r.Get("/users", testHandler("users"))
 
+	assert.Equal(t, r.Prefix(), "/api/v1")
 	assert.Equal(t, testRequest(t, r, http.MethodGet, "/api/v1/users").Code, http.StatusOK)
 	assert.Equal(t, testRequest(t, r, http.MethodGet, "/users").Code, http.StatusNotFound)
 }
