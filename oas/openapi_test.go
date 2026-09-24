@@ -2,6 +2,7 @@ package oas
 
 import (
 	"encoding/json/v2"
+	"slices"
 	"testing"
 
 	"github.com/guregu/null/v6"
@@ -31,7 +32,7 @@ func TestRefTMarshal(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for tt := range slices.Values(tests) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.input)
 			assert.NoError(t, err)
@@ -99,7 +100,7 @@ func TestBoolOrSchemaMarshal(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for tt := range slices.Values(tests) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.input)
 			assert.NoError(t, err)
@@ -150,7 +151,7 @@ func TestStringsMarshal(t *testing.T) {
 		{name: "empty", input: Strings{}, want: `[]`},
 	}
 
-	for _, tt := range tests {
+	for tt := range slices.Values(tests) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.input)
 			assert.NoError(t, err)
@@ -207,7 +208,7 @@ func TestUnionOmitZero(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for tt := range slices.Values(tests) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := json.Marshal(tt.input)
 			assert.NoError(t, err)

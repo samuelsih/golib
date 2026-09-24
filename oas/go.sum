@@ -2,3 +2,7 @@ github.com/guregu/null/v6 v6.0.0 h1:N14VRS+4di81i1PXRiprbQJ9EM9gqBa0+KVMeS/QSjQ=
 github.com/guregu/null/v6 v6.0.0/go.mod h1:hrMIhIfrOZeLPZhROSn149tpw2gHkidAqxoXNyeX3iQ=
 github.com/samuelsih/golib/assert v1.0.1 h1:hXSDCb+oRsDrg/Am3y3A6jJFh0e+xM6lVECHgw2NsK8=
 github.com/samuelsih/golib/assert v1.0.1/go.mod h1:9yYI+VycQpOXxesjPv5lVJQr4ORr2Ig/qCRNrpwdhf8=
+github.com/samuelsih/golib/httpx v1.5.0 h1:8Td0uMppQLEFR7CymMaZWYd0M4U0s/bM/4CrumMzKVA=
+github.com/samuelsih/golib/httpx v1.5.0/go.mod h1:egYo7M/4CmKtIPZj40NnkftF+/DyEv42WaKfvOQCwfQ=
+github.com/samuelsih/golib/reflectx v1.1.0 h1:1K3EL/PrU6x7LActa7be6D9cHckMtja5ACa87VBgko0=
+github.com/samuelsih/golib/reflectx v1.1.0/go.mod h1:GLJJ68qwvK+T13bGWOLDPZpWpS0EiPF2HeeFdbgjZMw=
