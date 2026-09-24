@@ -139,35 +139,35 @@ func TestGetTagValueAs(t *testing.T) {
 	}
 
 	t.Run("string", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[string](field(t, "Str"), "env"), "kudaponi")
+		assert.Equal(t, tagValue[string](field(t, "Str"), "env"), "kudaponi")
 	})
 
 	t.Run("int", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[int](field(t, "Int"), "env"), 42)
+		assert.Equal(t, tagValue[int](field(t, "Int"), "env"), 42)
 	})
 
 	t.Run("uint", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[uint](field(t, "Uint"), "env"), uint(7))
+		assert.Equal(t, tagValue[uint](field(t, "Uint"), "env"), uint(7))
 	})
 
 	t.Run("float", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[float64](field(t, "Float"), "env"), 1.5)
+		assert.Equal(t, tagValue[float64](field(t, "Float"), "env"), 1.5)
 	})
 
 	t.Run("complex", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[complex128](field(t, "Complex"), "env"), complex(1, 2))
+		assert.Equal(t, tagValue[complex128](field(t, "Complex"), "env"), complex(1, 2))
 	})
 
 	t.Run("bool", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[bool](field(t, "Bool"), "env"), true)
+		assert.Equal(t, tagValue[bool](field(t, "Bool"), "env"), true)
 	})
 
 	t.Run("custom type via text unmarshaler", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[level](field(t, "Level"), "env"), level(3))
+		assert.Equal(t, tagValue[level](field(t, "Level"), "env"), level(3))
 	})
 
 	t.Run("time.Duration", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[time.Duration](field(t, "Duration"), "env"), 5*time.Second)
+		assert.Equal(t, tagValue[time.Duration](field(t, "Duration"), "env"), 5*time.Second)
 	})
 
 	t.Run("time.Location", func(t *testing.T) {
@@ -176,7 +176,7 @@ func TestGetTagValueAs(t *testing.T) {
 			t.Fatalf("load location: %v", err)
 		}
 
-		got := GetTagValueAs[*time.Location](field(t, "Location"), "env")
+		got := tagValue[*time.Location](field(t, "Location"), "env")
 		if got == nil {
 			t.Fatal("got nil location")
 		}
@@ -190,40 +190,40 @@ func TestGetTagValueAs(t *testing.T) {
 			t.Fatalf("parse url: %v", err)
 		}
 
-		assert.Equal(t, GetTagValueAs[*url.URL](field(t, "URL"), "env"), want)
+		assert.Equal(t, tagValue[*url.URL](field(t, "URL"), "env"), want)
 	})
 
 	t.Run("text unmarshaler", func(t *testing.T) {
 		want := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
-		assert.Equal(t, GetTagValueAs[time.Time](field(t, "Time"), "env"), want)
+		assert.Equal(t, tagValue[time.Time](field(t, "Time"), "env"), want)
 	})
 
 	t.Run("unparseable text unmarshaler", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[time.Time](field(t, "BadTime"), "env"), time.Time{})
+		assert.Equal(t, tagValue[time.Time](field(t, "BadTime"), "env"), time.Time{})
 	})
 
 	t.Run("missing key", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[int](field(t, "Int"), "json"), 0)
+		assert.Equal(t, tagValue[int](field(t, "Int"), "json"), 0)
 	})
 
 	t.Run("unparseable int", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[int](field(t, "BadInt"), "env"), 0)
+		assert.Equal(t, tagValue[int](field(t, "BadInt"), "env"), 0)
 	})
 
 	t.Run("unparseable bool", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[bool](field(t, "BadBool"), "env"), false)
+		assert.Equal(t, tagValue[bool](field(t, "BadBool"), "env"), false)
 	})
 
 	t.Run("unsupported kind", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[[]string](field(t, "Slice"), "env"), nil)
+		assert.Equal(t, tagValue[[]string](field(t, "Slice"), "env"), nil)
 	})
 
 	t.Run("empty tag value", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[int](field(t, "Empty"), "env"), 0)
+		assert.Equal(t, tagValue[int](field(t, "Empty"), "env"), 0)
 	})
 
 	t.Run("field without tags", func(t *testing.T) {
-		assert.Equal(t, GetTagValueAs[string](field(t, "NoTag"), "env"), "")
+		assert.Equal(t, tagValue[string](field(t, "NoTag"), "env"), "")
 	})
 }
 
@@ -282,4 +282,154 @@ func TestWalkStruct(t *testing.T) {
 
 	WalkStruct(reflect.TypeFor[struct{ B string }](), nil)
 	WalkStruct(nil, nil)
+}
+
+func TestIndirect(t *testing.T) {
+	assert.Equal(t, Indirect(reflect.TypeFor[int]()), reflect.TypeFor[int]())
+	assert.Equal(t, Indirect(reflect.TypeFor[*int]()), reflect.TypeFor[int]())
+	assert.Equal(t, Indirect(reflect.TypeFor[***int]()), reflect.TypeFor[int]())
+	assert.Nil(t, Indirect(nil))
+}
+
+func TestJSONFieldOf(t *testing.T) {
+	type tagged struct {
+		Named    string `json:"named"`
+		Omit     string `json:"omit,omitempty"`
+		Zero     string `json:"zero,omitzero"`
+		Stringy  string `json:"stringy,string,omitempty"`
+		Skipped  string `json:"-"`
+		Untagged string
+		Fallback string `json:",omitempty"`
+	}
+
+	tests := []struct {
+		name  string
+		field string
+		want  JSONField
+	}{
+		{name: "named", field: "Named", want: JSONField{Name: "named"}},
+		{name: "omitempty", field: "Omit", want: JSONField{Name: "omit", Omit: true}},
+		{name: "omitzero", field: "Zero", want: JSONField{Name: "zero", Omit: true}},
+		{name: "string option", field: "Stringy", want: JSONField{Name: "stringy", Omit: true}},
+		{name: "skipped", field: "Skipped", want: JSONField{Skip: true}},
+		{name: "untagged", field: "Untagged", want: JSONField{Name: "Untagged"}},
+		{name: "empty name", field: "Fallback", want: JSONField{Name: "Fallback", Omit: true}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sf, ok := reflect.TypeFor[tagged]().FieldByName(tt.field)
+			if !ok {
+				t.Fatalf("field %q not found", tt.field)
+			}
+
+			assert.Equal(t, JSONFieldOf(sf), tt.want)
+		})
+	}
+}
+
+func TestWalkFields(t *testing.T) {
+	var flattenAnonymous = func(sf reflect.StructField) bool { return sf.Anonymous }
+
+	collect := func(typ reflect.Type, flatten func(reflect.StructField) bool) []string {
+		var got []string
+		WalkFields(typ, flatten, func(sf reflect.StructField) {
+			got = append(got, sf.Name)
+		})
+
+		return got
+	}
+
+	type (
+		skip struct {
+			Hidden int
+			secret int
+		}
+		leaf   struct{ X int }
+		offset struct{ leaf }
+		branch struct {
+			leaf
+			offset
+		}
+		tree struct {
+			*tree
+			V int
+		}
+		unexported struct {
+			leaf
+			hidden leaf
+		}
+	)
+
+	tests := []struct {
+		name    string
+		typ     reflect.Type
+		flatten func(reflect.StructField) bool
+		want    []string
+	}{
+		{name: "flat", typ: reflect.TypeFor[struct {
+			B string
+			C int
+		}](), want: []string{"B", "C"}},
+		{name: "pointer", typ: reflect.TypeFor[*struct {
+			B string
+		}](), want: []string{"B"}},
+		{name: "embedded flattened", typ: reflect.TypeFor[branch](), flatten: flattenAnonymous, want: []string{"X", "X"}},
+		{name: "embedded kept", typ: reflect.TypeFor[branch](), want: []string{"leaf", "offset"}},
+		{name: "unexported field skipped", typ: reflect.TypeFor[skip](), want: []string{"Hidden"}},
+		{name: "unexported embedded walked", typ: reflect.TypeFor[unexported](), flatten: flattenAnonymous, want: []string{"X"}},
+		{name: "recursive", typ: reflect.TypeFor[tree](), flatten: flattenAnonymous, want: []string{"V"}},
+		{name: "non-struct", typ: reflect.TypeFor[int](), want: nil},
+		{name: "nil type", typ: nil, want: nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, collect(tt.typ, tt.flatten), tt.want)
+		})
+	}
+
+	WalkFields(reflect.TypeFor[struct{ B string }](), nil, nil)
+}
+
+func tagValue[T any](sf reflect.StructField, key string) T {
+	value, _ := GetTagValueAs[T](sf, key)
+
+	return value
+}
+
+func TestGetTagValueAsPresence(t *testing.T) {
+	type tagged struct {
+		Count int `env:"42"`
+		Bad   int `env:"nope"`
+	}
+
+	field := func(t *testing.T, name string) reflect.StructField {
+		t.Helper()
+
+		sf, ok := reflect.TypeFor[tagged]().FieldByName(name)
+		if !ok {
+			t.Fatalf("field %q not found", name)
+		}
+
+		return sf
+	}
+
+	t.Run("present", func(t *testing.T) {
+		got, ok := GetTagValueAs[int](field(t, "Count"), "env")
+		assert.True(t, ok)
+		assert.Equal(t, got, 42)
+	})
+
+	t.Run("missing", func(t *testing.T) {
+		got, ok := GetTagValueAs[int](field(t, "Count"), "json")
+		assert.False(t, ok)
+		assert.Equal(t, got, 0)
+	})
+
+	t.Run("unparseable", func(t *testing.T) {
+		got, ok := GetTagValueAs[int](field(t, "Bad"), "env")
+		assert.True(t, ok)
+		assert.Equal(t, got, 0)
+	})
 }

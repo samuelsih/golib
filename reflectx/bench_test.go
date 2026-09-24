@@ -40,7 +40,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "String")
 
 		for b.Loop() {
-			_ = GetTagValueAs[string](sf, "tag")
+			_, _ = GetTagValueAs[string](sf, "tag")
 		}
 	})
 
@@ -48,7 +48,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Bool")
 
 		for b.Loop() {
-			_ = GetTagValueAs[bool](sf, "tag")
+			_, _ = GetTagValueAs[bool](sf, "tag")
 		}
 	})
 
@@ -56,7 +56,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Int")
 
 		for b.Loop() {
-			_ = GetTagValueAs[int](sf, "tag")
+			_, _ = GetTagValueAs[int](sf, "tag")
 		}
 	})
 
@@ -64,7 +64,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Float64")
 
 		for b.Loop() {
-			_ = GetTagValueAs[float64](sf, "tag")
+			_, _ = GetTagValueAs[float64](sf, "tag")
 		}
 	})
 
@@ -72,7 +72,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Complex")
 
 		for b.Loop() {
-			_ = GetTagValueAs[complex128](sf, "tag")
+			_, _ = GetTagValueAs[complex128](sf, "tag")
 		}
 	})
 
@@ -80,7 +80,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Duration")
 
 		for b.Loop() {
-			_ = GetTagValueAs[time.Duration](sf, "tag")
+			_, _ = GetTagValueAs[time.Duration](sf, "tag")
 		}
 	})
 
@@ -88,7 +88,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Time")
 
 		for b.Loop() {
-			_ = GetTagValueAs[time.Time](sf, "tag")
+			_, _ = GetTagValueAs[time.Time](sf, "tag")
 		}
 	})
 
@@ -96,7 +96,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Location")
 
 		for b.Loop() {
-			_ = GetTagValueAs[*time.Location](sf, "tag")
+			_, _ = GetTagValueAs[*time.Location](sf, "tag")
 		}
 	})
 
@@ -104,7 +104,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "URL")
 
 		for b.Loop() {
-			_ = GetTagValueAs[*url.URL](sf, "tag")
+			_, _ = GetTagValueAs[*url.URL](sf, "tag")
 		}
 	})
 
@@ -112,7 +112,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Missing")
 
 		for b.Loop() {
-			_ = GetTagValueAs[string](sf, "tag")
+			_, _ = GetTagValueAs[string](sf, "tag")
 		}
 	})
 
@@ -120,7 +120,7 @@ func BenchmarkGetTagValueAs(b *testing.B) {
 		sf := benchField(b, "Slice")
 
 		for b.Loop() {
-			_ = GetTagValueAs[[]string](sf, "tag")
+			_, _ = GetTagValueAs[[]string](sf, "tag")
 		}
 	})
 }
