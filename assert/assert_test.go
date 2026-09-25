@@ -40,7 +40,7 @@ func TestIsEqual(t *testing.T) {
 		got  bool
 		want bool
 	}{
-		{name: "both nil", got: isEqual[any](nil, nil), want: true},
+		{name: "both nil", got: isEqual(nil, nil), want: true},
 		{name: "equal typed nil pointers", got: isEqual(nilPtr, (*int)(nil)), want: true},
 		{name: "typed nil and allocated pointer", got: isEqual(nilPtr, new(int)), want: false},
 		{name: "nil and empty slice", got: isEqual([]int(nil), []int{}), want: false},

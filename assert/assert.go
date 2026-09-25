@@ -6,14 +6,14 @@ import (
 	"testing"
 )
 
-func Equal[T any](t *testing.T, got, want T) {
+func Equal(t *testing.T, got, want any) {
 	t.Helper()
 	if !isEqual(got, want) {
 		t.Errorf("got: %v; want: %v", got, want)
 	}
 }
 
-func NotEqual[T any](t *testing.T, got, want T) {
+func NotEqual(t *testing.T, got, want any) {
 	t.Helper()
 	if isEqual(got, want) {
 		t.Errorf("got: %v; expected values to be different", got)
@@ -84,15 +84,36 @@ func NoError(t *testing.T, err error) {
 	}
 }
 
-func isEqual[T any](got, want T) bool {
+func isEqual(got, want any) bool {
 	gotNil, wantNil := isNil(got), isNil(want)
 	if gotNil || wantNil {
 		return gotNil && wantNil
 	}
-	if equalable, ok := any(got).(interface{ Equal(T) bool }); ok {
-		return equalable.Equal(want)
+	if equal, ok := callEqualMethod(got, want); ok {
+		return equal
 	}
-	return reflect.DeepEqual(got, want)
+	return equalValues(got, want)
+}
+
+// callEqualMethod invokes got's Equal method when its parameter can hold
+// want, letting types customize their own comparison.
+func callEqualMethod(got, want any) (equal, ok bool) {
+	method := reflect.ValueOf(got).MethodByName("Equal")
+	if !method.IsValid() {
+		return false, false
+	}
+
+	methodType := method.Type()
+	if methodType.NumIn() != 1 || methodType.NumOut() != 1 || methodType.Out(0).Kind() != reflect.Bool {
+		return false, false
+	}
+
+	wantValue := reflect.ValueOf(want)
+	if !wantValue.IsValid() || !wantValue.Type().AssignableTo(methodType.In(0)) {
+		return false, false
+	}
+
+	return method.Call([]reflect.Value{wantValue})[0].Bool(), true
 }
 
 func isNil(v any) bool {
