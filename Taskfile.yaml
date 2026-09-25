@@ -7,3 +7,8 @@ tasks:
   test:
     cmd: go test -v -race ./...
     dir: "{{.CLI_ARGS}}"
+
+  tag:push:
+    cmds:
+      - git tag {{.CLI_ARGS}}
+      - git push origin {{.CLI_ARGS}} 
