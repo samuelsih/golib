@@ -139,6 +139,10 @@ func (b *schemaBuilder) objectSchema(t reflect.Type) *Schema {
 
 	reflectx.WalkFields(t, shouldFlattenJSON, func(sf reflect.StructField) {
 		field := reflectx.JSONFieldOf(sf)
+		if field.Skip {
+			return
+		}
+
 		properties[field.Name] = applyFieldTags(b.build(sf.Type), sf, false)
 		if fieldRequired(sf, field.Omit) && !slices.Contains(required, field.Name) {
 			required = append(required, field.Name)

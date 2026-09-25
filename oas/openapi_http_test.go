@@ -41,12 +41,12 @@ type getUserParams struct {
 	ID     string `path:"id" description:"User id"`
 	Full   bool   `query:"full" default:"false" required:"false" description:"Include details"`
 	APIKey string `header:"X-Api-Key" required:"true"`
-	Limit  *int   `query:"limit" minimum:"1" maximum:"100"`
+	Limit  *int   `query:"limit" minimum:"1" maximum:"100" example:"20"`
 }
 
 type userModel struct {
 	ID    string      `json:"id" description:"Unique id"`
-	Name  string      `json:"name" minLength:"1" maxLength:"100"`
+	Name  string      `json:"name" minLength:"1" maxLength:"100" example:"Ada"`
 	Email null.String `json:"email"`
 	Age   *int        `json:"age,omitempty"`
 	Tags  []string    `json:"tags,omitempty"`
@@ -110,6 +110,7 @@ func TestAPIServerOpenAPI(t *testing.T) {
 	full := findParam(t, op.Parameters, ParameterInQuery, "full")
 	assert.False(t, full.Required.Bool)
 	assert.Equal(t, full.Schema.Value.Default, false)
+	assert.Equal(t, full.Description.String, "Include details")
 
 	apiKey := findParam(t, op.Parameters, ParameterInHeader, "X-Api-Key")
 	assert.True(t, apiKey.Required.Bool)
@@ -118,6 +119,7 @@ func TestAPIServerOpenAPI(t *testing.T) {
 	assert.False(t, limit.Required.Bool)
 	assert.Equal(t, limit.Schema.Value.Minimum.Float64, float64(1))
 	assert.Equal(t, limit.Schema.Value.Maximum.Float64, float64(100))
+	assert.Equal(t, limit.Example, any(int64(20)))
 
 	assert.Equal(t, op.Responses["404"].Value.Description, "Not found")
 
@@ -134,6 +136,8 @@ func TestAPIServerOpenAPI(t *testing.T) {
 
 	user := doc.Components.V.Schemas["userModel"].Value
 	assert.Equal(t, user.Required, []string{"id", "name", "email"})
+	assert.Equal(t, user.Properties["id"].Value.Description.String, "Unique id")
+	assert.Equal(t, user.Properties["name"].Value.Examples[0], any("Ada"))
 	assert.Equal(t, user.Properties["name"].Value.MinLength.Int64, int64(1))
 	assert.Equal(t, user.Properties["name"].Value.MaxLength.Int64, int64(100))
 	assert.Equal(t, user.Properties["email"].Value.Type, Strings{"string", "null"})
@@ -246,6 +250,9 @@ func TestNestedAndEmbeddedSchemas(t *testing.T) {
 	article := doc.Components.V.Schemas["articleModel"].Value
 	_, ok := article.Properties["secret"]
 	assert.False(t, ok)
+	_, ok = article.Properties[""]
+	assert.False(t, ok)
+	assert.False(t, slices.Contains(article.Required, ""))
 
 	createdAt := article.Properties["created_at"].Value
 	assert.NotNil(t, createdAt)

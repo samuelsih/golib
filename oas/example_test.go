@@ -7,16 +7,16 @@ import (
 )
 
 type exampleUser struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID   string `json:"id" example:"u_1"`
+	Name string `json:"name" description:"Display name" example:"Ada"`
 }
 
 type exampleCreateUser struct {
-	Name string `json:"name" minLength:"1"`
+	Name string `json:"name" minLength:"1" description:"Display name" example:"Ada"`
 }
 
 type exampleListParams struct {
-	Page int `query:"page" default:"1" minimum:"1"`
+	Page int `query:"page" default:"1" minimum:"1" description:"Page number" example:"2"`
 }
 
 // ExampleNewServer registers documented routes on an httpx router and builds
