@@ -2,6 +2,7 @@ package golib
 
 import (
 	"encoding"
+	jsonv1 "encoding/json"
 	"encoding/json/v2"
 	"errors"
 	"fmt"
@@ -191,4 +192,22 @@ func TestSecretMarshalUnmarshalIsRedacted(t *testing.T) {
 	var decoded Secret[string]
 	assert.NoError(t, json.Unmarshal(data, &decoded))
 	assert.Equal(t, decoded.Value(), "{REDACTED}")
+}
+
+func TestSecretJSONV1Compatibility(t *testing.T) {
+	got, err := jsonv1.Marshal(NewSecret("hunter2"))
+	assert.NoError(t, err)
+	assert.Equal(t, string(got), `"{REDACTED}"`)
+
+	got, err = jsonv1.Marshal(secretPayload{User: "sam", Pass: NewSecret("hunter2")})
+	assert.NoError(t, err)
+	assert.Equal(t, string(got), `{"user":"sam","pass":"{REDACTED}"}`)
+
+	var decoded Secret[string]
+	assert.NoError(t, jsonv1.Unmarshal([]byte(`"hello"`), &decoded))
+	assert.Equal(t, decoded.Value(), "hello")
+
+	keep := NewSecret("keep")
+	assert.NoError(t, jsonv1.Unmarshal([]byte(`null`), &keep))
+	assert.Equal(t, keep.Value(), "keep")
 }

@@ -3,6 +3,7 @@ package golib
 import (
 	"bytes"
 	"encoding"
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 )
@@ -11,8 +12,10 @@ var (
 	_ fmt.Stringer             = Secret[string]{}
 	_ fmt.GoStringer           = Secret[string]{}
 	_ json.Marshaler           = Secret[string]{}
+	_ json.MarshalerTo         = Secret[string]{}
 	_ encoding.TextUnmarshaler = (*Secret[string])(nil)
 	_ json.Unmarshaler         = (*Secret[string])(nil)
+	_ json.UnmarshalerFrom     = (*Secret[string])(nil)
 )
 
 // Secret holds a value that is redacted when formatted or marshaled.
@@ -44,6 +47,11 @@ func (s Secret[_]) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// MarshalJSONTo implements json.MarshalerTo for encoding/json/v2.
+func (s Secret[_]) MarshalJSONTo(enc *jsontext.Encoder) error {
+	return enc.WriteToken(jsontext.String(s.String()))
+}
+
 // UnmarshalJSON decodes p into the secret, leaving it unchanged when p is null.
 func (s *Secret[T]) UnmarshalJSON(p []byte) error {
 	if string(p) == "null" {
@@ -56,6 +64,22 @@ func (s *Secret[T]) UnmarshalJSON(p []byte) error {
 	}
 
 	*s = NewSecret(value)
+	return nil
+}
+
+// UnmarshalJSONFrom implements json.UnmarshalerFrom for encoding/json/v2.
+func (s *Secret[T]) UnmarshalJSONFrom(dec *jsontext.Decoder) error {
+	if dec.PeekKind() == jsontext.KindNull {
+		return dec.SkipValue()
+	}
+
+	var value T
+	if err := json.UnmarshalDecode(dec, &value); err != nil {
+		return err
+	}
+
+	*s = NewSecret(value)
+
 	return nil
 }
 
