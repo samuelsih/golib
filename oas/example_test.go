@@ -1,6 +1,7 @@
 package oas
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/samuelsih/golib/httpx"
@@ -52,5 +53,6 @@ func ExampleNewServer() {
 	})
 
 	doc := server.MustOpenAPI()
-	_ = doc
+	fmt.Println(doc.Info.Title)
+	// Output: Users API
 }

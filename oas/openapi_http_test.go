@@ -254,7 +254,7 @@ func TestNestedAndEmbeddedSchemas(t *testing.T) {
 	assert.False(t, ok)
 	assert.False(t, slices.Contains(article.Required, ""))
 
-	createdAt := article.Properties["created_at"].Value
+	createdAt := article.Properties["createdAt"].Value
 	assert.NotNil(t, createdAt)
 	assert.Equal(t, createdAt.Type, Strings{"string"})
 	assert.Equal(t, createdAt.Format.String, "date-time")
@@ -269,7 +269,7 @@ func TestNestedAndEmbeddedSchemas(t *testing.T) {
 }
 
 type auditFields struct {
-	CreatedAt time.Time `json:"created_at"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type articleModel struct {

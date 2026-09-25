@@ -9,6 +9,14 @@ import (
 	"github.com/samuelsih/golib/assert"
 )
 
+func TestLicensePresets(t *testing.T) {
+	assert.Equal(t, LicenseMIT.Name, "MIT License")
+	assert.Equal(t, LicenseMIT.Identifier.String, "MIT")
+	assert.Equal(t, LicenseApache20.Identifier.String, "Apache-2.0")
+	assert.Equal(t, LicenseBSD3Clause.Name, `BSD 3-Clause "New" or "Revised" License`)
+	assert.Equal(t, LicenseAGPL30.Identifier.String, "AGPL-3.0-only")
+}
+
 func TestRefTMarshal(t *testing.T) {
 	tests := []struct {
 		name  string

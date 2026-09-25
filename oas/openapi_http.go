@@ -642,11 +642,8 @@ func hasLocationTag(tag reflect.StructTag) bool {
 
 // parsePath converts a Go 1.22 ServeMux pattern into an OpenAPI path and
 // returns the names of its path parameters.
-func parsePath(route string) (string, []string, error) {
-	var (
-		out    strings.Builder
-		params []string
-	)
+func parsePath(route string) (openPath string, params []string, err error) {
+	var out strings.Builder
 
 	for i := 0; i < len(route); {
 		if route[i] != '{' {
@@ -678,10 +675,10 @@ func parsePath(route string) (string, []string, error) {
 		out.WriteByte('}')
 	}
 
-	result := out.String()
-	if result == "" {
-		result = "/"
+	openPath = out.String()
+	if openPath == "" {
+		openPath = "/"
 	}
 
-	return result, params, nil
+	return openPath, params, nil
 }

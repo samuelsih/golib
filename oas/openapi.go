@@ -50,6 +50,18 @@ type License struct {
 	Extensions map[string]any `json:"-"`
 }
 
+// SPDX license presets.
+var (
+	LicenseMIT        = License{Name: "MIT License", Identifier: null.StringFrom("MIT")}
+	LicenseApache20   = License{Name: "Apache License 2.0", Identifier: null.StringFrom("Apache-2.0")}
+	LicenseBSD2Clause = License{Name: `BSD 2-Clause "Simplified" License`, Identifier: null.StringFrom("BSD-2-Clause")}
+	LicenseBSD3Clause = License{Name: `BSD 3-Clause "New" or "Revised" License`, Identifier: null.StringFrom("BSD-3-Clause")}
+	LicenseISC        = License{Name: "ISC License", Identifier: null.StringFrom("ISC")}
+	LicenseMPL20      = License{Name: "Mozilla Public License 2.0", Identifier: null.StringFrom("MPL-2.0")}
+	LicenseGPL30      = License{Name: "GNU General Public License v3.0 only", Identifier: null.StringFrom("GPL-3.0-only")}
+	LicenseAGPL30     = License{Name: "GNU Affero General Public License v3.0 only", Identifier: null.StringFrom("AGPL-3.0-only")}
+)
+
 // ExternalDocumentation points to additional external documentation.
 type ExternalDocumentation struct {
 	Description null.String    `json:"description,omitzero"`
