@@ -12,6 +12,7 @@ on:
       - "reflectx/v*"
       - "slicex/v*"
       - "sqlmigration/v*"
+      - "sqlmigration/pgx/v*"
   workflow_dispatch:
     inputs:
       tag:
@@ -37,11 +38,10 @@ jobs:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           version="${TAG##*/}"
-          prefix="${TAG%%/*}"
+          dir="${TAG%/*}"
 
-          if [[ "$TAG" == */* && -f "$prefix/go.mod" ]]; then
-            dir="$prefix"
-            name="$prefix"
+          if [[ "$TAG" == */* && -f "$dir/go.mod" ]]; then
+            name="$dir"
           else
             dir="."
             name="golib"

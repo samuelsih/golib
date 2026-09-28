@@ -4,6 +4,9 @@ tasks:
   lint:
     cmd: golangci-lint run {{.CLI_ARGS}}
 
+  fmt:
+    cmd: golangci-lint fmt {{.CLI_ARGS}}
+
   test:
     cmd: go test -v -race ./...
     dir: "{{.CLI_ARGS}}"
