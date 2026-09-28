@@ -11,6 +11,7 @@ on:
       - "httpx/v*"
       - "reflectx/v*"
       - "slicex/v*"
+      - "sqlmigration/v*"
   workflow_dispatch:
     inputs:
       tag:

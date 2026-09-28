@@ -1,4 +1,4 @@
-module github.com/samuelsih/sqlmigration
+module github.com/samuelsih/golib/sqlmigration
 
 go 1.27.0
 
