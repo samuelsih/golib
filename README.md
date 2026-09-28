@@ -11,3 +11,4 @@ A collection of small, focused Go packages. Each package is a separate module.
 - [reflectx](./reflectx): extra reflection utilities
 - [slogx](./slogx): extra slog utilities
 - [stringx](./stringx): extra string utilities
+- [slicex](./slicex): extra slice utilities

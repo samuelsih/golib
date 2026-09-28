@@ -10,6 +10,7 @@ on:
       - "concx/v*"
       - "httpx/v*"
       - "reflectx/v*"
+      - "slicex/v*"
   workflow_dispatch:
     inputs:
       tag:
