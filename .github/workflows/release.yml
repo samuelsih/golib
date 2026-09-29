@@ -13,6 +13,7 @@ on:
       - "slicex/v*"
       - "sqlmigration/v*"
       - "sqlmigration/pgx/v*"
+      - "sqlmigration/cmd/sqlmigrate/v*"
   workflow_dispatch:
     inputs:
       tag:
