@@ -11,6 +11,7 @@ on:
       - "httpx/v*"
       - "reflectx/v*"
       - "slicex/v*"
+      - "oas/v*"
       - "sqlmigration/v*"
       - "sqlmigration/pgx/v*"
       - "sqlmigration/cmd/sqlmigrate/v*"
