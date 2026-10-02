@@ -332,3 +332,33 @@ func TestAPIServerDocumentMarshal(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, len(raw) > 0)
 }
+
+func TestAPIServerSecuritySchemes(t *testing.T) {
+	server := NewServer(httpx.NewRouter(), ServerConfig{
+		Title: "API",
+		SecuritySchemes: map[string]RefT[SecurityScheme]{
+			"cookieAuth": {
+				Value: &SecurityScheme{
+					Type: SecuritySchemeTypeAPIKey,
+					In:   null.ValueFrom(SecuritySchemeInCookie),
+					Name: null.StringFrom("application_cookie_session"),
+				},
+			},
+		},
+	})
+
+	server.Get("/me", testHandler("me")).Spec(Spec{
+		OperationID: "auth-me",
+		Security:    []SecurityRequirement{{"cookieAuth": {}}},
+	})
+
+	doc, err := server.OpenAPI()
+	assert.NoError(t, err)
+
+	scheme, ok := doc.Components.V.SecuritySchemes["cookieAuth"]
+	assert.True(t, ok)
+	assert.Equal(t, scheme.Value.Type, SecuritySchemeTypeAPIKey)
+	assert.Equal(t, scheme.Value.In.V, SecuritySchemeInCookie)
+	assert.Equal(t, scheme.Value.Name.String, "application_cookie_session")
+	assert.Equal(t, doc.Paths["/me"].Value.Get.V.Security, []SecurityRequirement{{"cookieAuth": {}}})
+}

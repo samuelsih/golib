@@ -28,6 +28,7 @@ type ServerConfig struct {
 	Servers           []Server
 	Tags              []Tag
 	Security          []SecurityRequirement
+	SecuritySchemes   map[string]RefT[SecurityScheme]
 	JSONSchemaDialect string
 }
 
@@ -353,8 +354,11 @@ func (s *APIServer) OpenAPI() (*OpenAPI, error) {
 	if len(paths) > 0 {
 		doc.Paths = paths
 	}
-	if len(b.comps) > 0 {
-		doc.Components = null.ValueFrom(Components{Schemas: b.comps})
+	if len(b.comps) > 0 || len(cfg.SecuritySchemes) > 0 {
+		doc.Components = null.ValueFrom(Components{
+			Schemas:         b.comps,
+			SecuritySchemes: cfg.SecuritySchemes,
+		})
 	}
 
 	errs = append(errs, b.errs...)
