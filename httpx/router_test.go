@@ -308,6 +308,127 @@ func TestRouterMiddlewareError(t *testing.T) {
 	assert.Equal(t, rec.Code, http.StatusNotFound)
 }
 
+func TestRouterUseAppliesToRegisteredRoutes(t *testing.T) {
+	var calls []string
+
+	r := NewRouter()
+	r.Get("/route", testHandler("ok"))
+	r.Use(testTracer(&calls, "late"))
+
+	rec := testRequest(t, r, http.MethodGet, "/route")
+	assert.Equal(t, rec.Code, http.StatusOK)
+	assert.Equal(t, calls, []string{"late"})
+}
+
+func TestRouterMiddlewareAppliesToNotFound(t *testing.T) {
+	var calls []string
+
+	r := NewRouter()
+	r.Use(testTracer(&calls, "chain"))
+
+	rec := testRequest(t, r, http.MethodGet, "/missing")
+	assert.Equal(t, rec.Code, http.StatusNotFound)
+	assert.Equal(t, calls, []string{"chain"})
+}
+
+func TestRouterMiddlewareAppliesToMethodNotAllowed(t *testing.T) {
+	var calls []string
+
+	r := NewRouter()
+	r.Use(testTracer(&calls, "chain"))
+	r.Get("/route", testHandler("ok"))
+
+	rec := testRequest(t, r, http.MethodPost, "/route")
+	assert.Equal(t, rec.Code, http.StatusMethodNotAllowed)
+	assert.Equal(t, calls, []string{"chain"})
+}
+
+func TestMiddlewareDeferObservesHandledError(t *testing.T) {
+	var status int
+
+	r := NewRouter()
+	r.Use(func(next Handler) Handler {
+		return func(w http.ResponseWriter, req *http.Request) error {
+			recorder := &statusRecorder{ResponseWriter: w}
+
+			defer func() {
+				status = recorder.status
+			}()
+
+			return next(recorder, req)
+		}
+	})
+	r.Get("/boom", testErrorHandler(errors.New("boom")))
+
+	rec := testRequest(t, r, http.MethodGet, "/boom")
+	assert.Equal(t, rec.Code, http.StatusInternalServerError)
+	assert.Equal(t, status, http.StatusInternalServerError)
+}
+
+func TestMiddlewareDeferRecoversPanic(t *testing.T) {
+	r := NewRouter()
+	r.Use(func(next Handler) Handler {
+		return func(w http.ResponseWriter, req *http.Request) (err error) {
+			defer func() {
+				if recovered := recover(); recovered != nil {
+					err = fmt.Errorf("panic: %v", recovered)
+				}
+			}()
+
+			return next(w, req)
+		}
+	})
+	r.Get("/panic", func(http.ResponseWriter, *http.Request) error {
+		defer func() {
+			panic("deferred cleanup")
+		}()
+
+		return nil
+	})
+
+	rec := testRequest(t, r, http.MethodGet, "/panic")
+	assert.Equal(t, rec.Code, http.StatusInternalServerError)
+	assert.Equal(t, rec.Body.String(), http.StatusText(http.StatusInternalServerError)+"\n")
+}
+
+func TestMiddlewareObservesHandledError(t *testing.T) {
+	var seen error
+
+	r := NewRouter()
+	r.Use(func(next Handler) Handler {
+		return func(w http.ResponseWriter, req *http.Request) error {
+			seen = next(w, req)
+			return seen
+		}
+	})
+	r.Get("/boom", testErrorHandler(ErrInvalidRequestBody))
+
+	rec := testRequest(t, r, http.MethodGet, "/boom")
+	assert.Equal(t, rec.Code, http.StatusBadRequest)
+	assert.ErrorIs(t, seen, ErrInvalidRequestBody)
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+}
+
+func (w *statusRecorder) WriteHeader(status int) {
+	if w.status == 0 {
+		w.status = status
+	}
+
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *statusRecorder) Write(b []byte) (int, error) {
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+
+	return w.ResponseWriter.Write(b)
+}
+
 func TestRouterErrorHandlers(t *testing.T) {
 	t.Run("stop prevents default handling", func(t *testing.T) {
 		r := NewRouter()

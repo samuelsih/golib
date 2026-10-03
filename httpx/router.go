@@ -68,7 +68,7 @@ func NewRouter(opts ...RouterOption) *Router {
 		o(r)
 	}
 
-	r.mux.Handle("/", r.wrapErrors(r.notFound))
+	r.mux.Handle("/", r.wrap(r.notFound, nil))
 
 	return r
 }
@@ -78,7 +78,8 @@ func (r *Router) Prefix() string {
 	return r.prefix
 }
 
-// Use appends a middleware handler to the Router middleware stack.
+// Use appends a middleware handler to the Router middleware stack. The chain
+// is resolved per request, so it applies to routes registered before Use too.
 func (r *Router) Use(middlewares ...Middleware) {
 	r.chain = append(r.chain, middlewares...)
 }
@@ -183,7 +184,7 @@ func (r *Router) handle(method, route string, fn Handler, mx []Middleware) {
 		return
 	}
 	r.state.paths[p] = struct{}{}
-	r.mux.Handle(p, r.wrapErrors(r.methodNotAllowed))
+	r.mux.Handle(p, r.wrap(r.methodNotAllowed, nil))
 }
 
 func (r *Router) notFound(_ http.ResponseWriter, _ *http.Request) error {
@@ -200,27 +201,56 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (r *Router) wrap(fn Handler, mx []Middleware) http.Handler {
-	mx = append(slices.Clone(r.chain), mx...)
-
-	slices.Reverse(mx)
-	for _, m := range mx {
-		fn = m(fn)
-	}
-
-	return r.wrapErrors(fn)
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		_ = r.buildHandler(fn, mx)(w, req)
+	})
 }
 
-func (r *Router) wrapErrors(fn Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if err := fn(w, req); err != nil {
-			for customErrHandler := range slices.Values(r.onErrs) {
-				if customErrHandler(w, req, err) == HandleStop {
-					return
-				}
-			}
-			writeError(w, err)
+// buildHandler resolves the middleware chain at request time.
+func (r *Router) buildHandler(fn Handler, mx []Middleware) Handler {
+	chain := append(slices.Clone(r.chain), mx...)
+
+	slices.Reverse(chain)
+
+	fn = r.handleError(fn)
+	for _, m := range chain {
+		fn = r.handleError(m(fn))
+	}
+
+	return fn
+}
+
+// handledError marks an error whose response handleError already wrote, so
+// outer middlewares observe it without writing a second response.
+type handledError struct{ err error }
+
+func (e *handledError) Error() string { return e.err.Error() }
+
+func (e *handledError) Unwrap() error { return e.err }
+
+// handleError runs the registered error handlers for any error fn returns,
+// writing with the same writer fn received.
+func (r *Router) handleError(fn Handler) Handler {
+	return func(w http.ResponseWriter, req *http.Request) error {
+		err := fn(w, req)
+		if err == nil {
+			return nil
 		}
-	})
+
+		if _, handled := errors.AsType[*handledError](err); handled {
+			return err
+		}
+
+		for customErrHandler := range slices.Values(r.onErrs) {
+			if customErrHandler(w, req, err) == HandleStop {
+				return &handledError{err: err}
+			}
+		}
+
+		writeError(w, err)
+
+		return &handledError{err: err}
+	}
 }
 
 func writeError(w http.ResponseWriter, err error) {

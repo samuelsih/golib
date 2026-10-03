@@ -483,3 +483,20 @@ func TestIsMethodAllowedReturnsTrueWithOptions(t *testing.T) {
 	})
 	assert.True(t, s.isMethodAllowed("OPTIONS"))
 }
+
+func TestRouterCORSPreflight(t *testing.T) {
+	r := NewRouter()
+	r.Use(CORSAllowAll().Handler)
+	r.Get("/things", corsTestHandler)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodOptions, "/things", nil)
+	req.Header.Set("Origin", "https://example.com")
+	req.Header.Set("Access-Control-Request-Method", http.MethodGet)
+
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	assert.Equal(t, rec.Code, http.StatusOK)
+	assert.Equal(t, rec.Header().Get("Access-Control-Allow-Origin"), "*")
+	assert.Equal(t, rec.Header().Get("Access-Control-Allow-Methods"), http.MethodGet)
+}
