@@ -195,3 +195,89 @@ func TestTransform(t *testing.T) {
 		assert.Nil(t, got)
 	})
 }
+
+func TestFilter(t *testing.T) {
+	even := func(v int) bool { return v%2 == 0 }
+
+	tests := []struct {
+		name string
+		s    []int
+		want []int
+	}{
+		{name: "empty", s: nil},
+		{name: "none match", s: []int{1, 3, 5}, want: []int{}},
+		{name: "all match", s: []int{2, 4}, want: []int{2, 4}},
+		{name: "some match", s: []int{1, 2, 3, 4, 5}, want: []int{2, 4}},
+		{name: "order preserved", s: []int{4, 1, 2, 3}, want: []int{4, 2}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Filter(tt.s, even)
+			assert.Equal(t, got, tt.want)
+		})
+	}
+
+	t.Run("does not mutate input", func(t *testing.T) {
+		s := []int{1, 2, 3, 4}
+
+		got := Filter(s, even)
+		assert.Equal(t, got, []int{2, 4})
+		assert.Equal(t, s, []int{1, 2, 3, 4})
+	})
+
+	t.Run("nil fn", func(t *testing.T) {
+		var fn func(int) bool
+
+		got := Filter([]int{1}, fn)
+		assert.Nil(t, got)
+	})
+}
+
+func TestFilterInPlace(t *testing.T) {
+	even := func(v int) bool { return v%2 == 0 }
+
+	tests := []struct {
+		name string
+		s    []int
+		want []int
+	}{
+		{name: "empty", s: nil},
+		{name: "none match", s: []int{1, 3, 5}, want: []int{}},
+		{name: "all match", s: []int{2, 4}, want: []int{2, 4}},
+		{name: "some match", s: []int{1, 2, 3, 4, 5}, want: []int{2, 4}},
+		{name: "order preserved", s: []int{4, 1, 2, 3}, want: []int{4, 2}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FilterInPlace(tt.s, even)
+			assert.Equal(t, got, tt.want)
+		})
+	}
+
+	t.Run("shares backing array", func(t *testing.T) {
+		s := []int{1, 2, 3, 4}
+
+		got := FilterInPlace(s, even)
+		assert.Equal(t, got, []int{2, 4})
+
+		got[0] = 99
+		assert.Equal(t, s[0], 99)
+	})
+
+	t.Run("clears vacated tail", func(t *testing.T) {
+		s := []string{"a", "bb", "c", "dd"}
+
+		got := FilterInPlace(s, func(v string) bool { return len(v) == 1 })
+		assert.Equal(t, got, []string{"a", "c"})
+		assert.Equal(t, s[2:], []string{"", ""})
+	})
+
+	t.Run("nil fn", func(t *testing.T) {
+		var fn func(int) bool
+
+		got := FilterInPlace([]int{1}, fn)
+		assert.Nil(t, got)
+	})
+}

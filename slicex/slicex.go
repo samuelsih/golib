@@ -145,3 +145,39 @@ func Transform[T, U any](s []T, fn func(T) U) []U {
 
 	return out
 }
+
+// Filter returns a new slice containing the elements of s for which keep
+// reports true, preserving order. It returns nil if keep is nil.
+func Filter[T any](s []T, keep func(T) bool) []T {
+	if len(s) == 0 || keep == nil {
+		return nil
+	}
+
+	out := make([]T, 0, len(s))
+	for _, v := range s {
+		if keep(v) {
+			out = append(out, v)
+		}
+	}
+
+	return out
+}
+
+// FilterInPlace returns the retained elements of s, reusing its backing array
+// and clearing the vacated tail; s must not be used afterwards.
+func FilterInPlace[T any](s []T, keep func(T) bool) []T {
+	if len(s) == 0 || keep == nil {
+		return nil
+	}
+
+	out := s[:0]
+	for _, v := range s {
+		if keep(v) {
+			out = append(out, v)
+		}
+	}
+
+	clear(s[len(out):])
+
+	return out
+}
