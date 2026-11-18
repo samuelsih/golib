@@ -1,6 +1,7 @@
 package concx
 
 import (
+	"context"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -188,4 +189,97 @@ func TestForEachResNilHandlerPanics(t *testing.T) {
 	}()
 
 	ForEachRes[int, int]([]int{1}, nil)
+}
+
+func TestFence(t *testing.T) {
+	t.Run("wait after release", func(t *testing.T) {
+		var f Fence
+		f.Release()
+
+		assert.NoError(t, f.Wait(t.Context()))
+	})
+
+	t.Run("wait blocks until release", func(t *testing.T) {
+		var f Fence
+
+		done := make(chan error, 1)
+		go func() { done <- f.Wait(t.Context()) }()
+
+		select {
+		case err := <-done:
+			t.Fatalf("Wait returned before Release: %v", err)
+		case <-time.After(10 * time.Millisecond):
+		}
+
+		f.Release()
+
+		select {
+		case err := <-done:
+			assert.NoError(t, err)
+		case <-time.After(time.Second):
+			t.Fatal("Wait did not return after Release")
+		}
+	})
+
+	t.Run("context cancelled", func(t *testing.T) {
+		var f Fence
+
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		assert.ErrorIs(t, f.Wait(ctx), context.Canceled)
+	})
+
+	t.Run("released channel", func(t *testing.T) {
+		var f Fence
+		ch := f.Released()
+
+		select {
+		case <-ch:
+			t.Fatal("Released channel closed before Release")
+		default:
+		}
+
+		f.Release()
+
+		select {
+		case <-ch:
+		case <-time.After(time.Second):
+			t.Fatal("Released channel not closed after Release")
+		}
+	})
+}
+
+func TestSleep(t *testing.T) {
+	t.Run("completes after duration", func(t *testing.T) {
+		const duration = 20 * time.Millisecond
+
+		start := time.Now()
+		err := Sleep(t.Context(), duration)
+		elapsed := time.Since(start)
+
+		assert.NoError(t, err)
+		assert.True(t, elapsed >= duration)
+	})
+
+	t.Run("context cancelled", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		start := time.Now()
+		err := Sleep(ctx, time.Hour)
+		elapsed := time.Since(start)
+
+		assert.ErrorIs(t, err, context.Canceled)
+		assert.True(t, elapsed < time.Second)
+	})
+
+	t.Run("context deadline exceeded", func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(t.Context(), 10*time.Millisecond)
+		defer cancel()
+
+		err := Sleep(ctx, time.Hour)
+
+		assert.ErrorIs(t, err, context.DeadlineExceeded)
+	})
 }
