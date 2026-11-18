@@ -8,6 +8,7 @@ on:
       - "slogx/v*"
       - "stringx/v*"
       - "concx/v*"
+      - "container/v*"
       - "cryptx/v*"
       - "httpx/v*"
       - "reflectx/v*"
