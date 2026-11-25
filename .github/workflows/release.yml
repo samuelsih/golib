@@ -11,6 +11,7 @@ on:
       - "container/v*"
       - "cryptx/v*"
       - "httpx/v*"
+      - "netx/v*"
       - "reflectx/v*"
       - "slicex/v*"
       - "oas/v*"
