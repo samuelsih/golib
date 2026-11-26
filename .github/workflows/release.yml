@@ -5,6 +5,7 @@ on:
     tags:
       - "v*"
       - "assert/v*"
+      - "bytex/v*"
       - "slogx/v*"
       - "stringx/v*"
       - "concx/v*"
